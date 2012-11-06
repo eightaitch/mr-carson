@@ -25,22 +25,22 @@
           <h4>Host</h4>
           <p><em>e.g. <b>5.5.5.5</b> or <b>ftp.host.com</b></em>
           </p>
-          <input type="text" name="host" value="{{ server['host'] }}" />   
+          <input type="text" name="host" value="{{ server.host }}" />   
 
           <h4>Username</h4>
           <p></p>
-          <input type="text" name="username" />   
+          <input type="text" name="username" value="{{ server.username }}" />   
         </div>
 
         <div class="span6">
           <h4>Port</h4>
           <p><em>most commonly <b>21</b></em>
           </p>
-          <input type="text" name="port" />   
+          <input type="text" name="port" value="{{ server.port }}" />   
 
           <h4>Password</h4>
           <p></p>
-          <input type="password" name="password" />   
+          <input type="password" name="password" value="{{ server.password }}" />   
         </div>
       </div>
        <div class="jumbotron">
