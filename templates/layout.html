@@ -45,9 +45,11 @@
   </head>
   <body>
 <div class="container-narrow">
-        {% for message in get_flashed_messages() %}
-        <div class=flash>{{ message }}</div>
+        <div class="hero-unit">
+        {% for category, message in get_flashed_messages(with_categories=true) %}
+            <h2 class="{{ category }}">{{ message }}</h2>
         {% endfor %}
+        </div>
         {% block body %}{% endblock %}
  
      <hr>

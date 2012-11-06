@@ -17,6 +17,12 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
+def flash_error(str):
+    flash(u'Error! ' + str, 'text-error')
+
+def flash_success(str):
+    flash(u'Success! ' + str, 'text-success')
+
 def connect_db():
     return sqlite3.connect(app.config['DATABASE'])
 
@@ -62,11 +68,11 @@ def edit_server():
         ftp.connect(request.form['host'], port, 5)
         ftp.login(request.form['username'], request.form['password'])
     except ValueError:
-        flash('error! make sure "Port" is a valid integer')
+        flash_error('make sure "Port" is a valid integer')
     except socket.timeout:
-        flash('error! unable to connect to server: timeout')
+        flash_error('unable to connect to server: timeout')
     else:
-        flash('success! connection established')
+        flash_success('connection established')
     return redirect(url_for('server'))
 
 if __name__ == '__main__':
