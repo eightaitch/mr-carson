@@ -28,7 +28,7 @@ def teardown_request(exception):
 
 @app.route('/config/')
 def config():
-    return 'config'
+    return render_template('config.html')
 
 @app.route('/config/', methods=['POST'])
 def edit_config():

@@ -1,0 +1,6 @@
+<!doctype html>
+<title>mr-carson</title>
+{% for message in get_flashed_messages() %}
+<div class=flash>{{ message }}</div>
+{% endfor %}
+{% block body %}{% endblock %}
