@@ -15,6 +15,9 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
+def connect_db():
+    return sqlite3.connect(app.config['DATABASE'])
+
 @app.before_request
 def before_request():
     g.db = connect_db()
@@ -23,8 +26,10 @@ def before_request():
 def teardown_request(exception):
     g.db.close()
 
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
+@app.route('/config/')
+def config():
+    return 'config'
+
 
 if __name__ == '__main__':
     app.run()
