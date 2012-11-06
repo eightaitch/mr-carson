@@ -15,49 +15,38 @@
       <div class="jumbotron">
         <h1>Let's get your server configured!</h1>
         <p class="lead">these are the settings needed to connect to your ftp server</p>
-        <a class="btn btn-large btn-success" href="#">Sign up today</a>
       </div>
 
       <hr>
 
+    <form action="{{ url_for('edit_config') }}" method=post class=add-entry>
       <div class="row-fluid marketing">
         <div class="span6">
-          <h4>Subheading</h4>
-          <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+          <h4>Host</h4>
+          <p><em>e.g. <b>5.5.5.5</b> or <b>ftp.host.com</b></em>
+          </p>
+          <input type="text" name="host" />   
 
-          <h4>Subheading</h4>
-          <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-          <h4>Subheading</h4>
-          <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+          <h4>Username</h4>
+          <p></p>
+          <input type="text" name="username" />   
         </div>
 
         <div class="span6">
-          <h4>Subheading</h4>
-          <p>Donec id elit non mi porta gravida at eget metus. Maecenas faucibus mollis interdum.</p>
+          <h4>Port</h4>
+          <p><em>most commonly <b>21</b></em>
+          </p>
+          <input type="text" name="port" />   
 
-          <h4>Subheading</h4>
-          <p>Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Cras mattis consectetur purus sit amet fermentum.</p>
-
-          <h4>Subheading</h4>
-          <p>Maecenas sed diam eget risus varius blandit sit amet non magna.</p>
+          <h4>Password</h4>
+          <p></p>
+          <input type="password" name="password" />   
         </div>
       </div>
-
-    <form action="{{ url_for('edit_config') }}" method=post class=add-entry>
-      <dl>
-        <dt>Title:
-        <dd><input type=text size=30 name=title>
-        <dt>Text:
-        <dd><textarea name=text rows=5 cols=40></textarea>
-        <dd><input type=submit value=Share>
-      </dl>
     </form>
-  <ul class=entries>
-  {% for entry in entries %}
-    <li><h2>{{ entry.title }}</h2>{{ entry.text|safe }}
-  {% else %}
-    <li><em>Unbelievable.  No entries here so far</em>
-  {% endfor %}
-  </ul>
-{% endblock %}
+       <div class="jumbotron">
+            <a class="btn btn-large btn-success" href="#">Save</a>
+            <a class="btn btn-large btn-success" href="#">Test</a>
+      </div>
+
+     {% endblock %}
