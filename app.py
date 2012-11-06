@@ -30,6 +30,16 @@ def teardown_request(exception):
 def config():
     return 'config'
 
+@app.route('/config/', methods=['POST'])
+def edit_config():
+    g.db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
+                 [request.form['host'],
+                  request.form['port'],
+                  request.form['username'],
+                  request.form['password']])
+    g.db.commit()
+    flash('Server settings saved!')
+    return redirect(url_for('config'))
 
 if __name__ == '__main__':
     app.run()
