@@ -28,10 +28,21 @@ def teardown_request(exception):
 
 @app.route('/server/')
 def server():
-    return render_template('server.html')
+    server_config = g.db.execute('select * from server').fetchone()
+    if server_config != None:
+        # server entry exists
+        values = [dict(host=server_config[0],
+                       port=server_config[1],
+                       username=server_config[2],
+                       password=server_config[3])]
+        return render_template('server.html', server=values)
+    else:
+        #server needs configuration    
+        return render_template('server.html')
 
 @app.route('/server/', methods=['POST'])
 def edit_server():
+    g.db.execute('delete from server')
     g.db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
                  [request.form['host'],
                   request.form['port'],
@@ -39,7 +50,7 @@ def edit_server():
                   request.form['password']])
     g.db.commit()
     flash('Server settings saved!')
-    return redirect(url_for('config'))
+    return redirect(url_for('server'))
 
 if __name__ == '__main__':
     app.run()
