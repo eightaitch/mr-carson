@@ -26,12 +26,12 @@ def before_request():
 def teardown_request(exception):
     g.db.close()
 
-@app.route('/config/')
-def config():
-    return render_template('config.html')
+@app.route('/server/')
+def server():
+    return render_template('server.html')
 
-@app.route('/config/', methods=['POST'])
-def edit_config():
+@app.route('/server/', methods=['POST'])
+def edit_server():
     g.db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
                  [request.form['host'],
                   request.form['port'],
