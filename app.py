@@ -1,7 +1,9 @@
 import sys
 sys.path.append('libs/')
 import sqlite3
+import socket
 from flask import *
+from ftplib import *
 
 # configuration
 DATABASE = 'sqlite/mr-carson.db'
@@ -26,6 +28,7 @@ def before_request():
 def teardown_request(exception):
     g.db.close()
 
+@app.route('/')
 @app.route('/server/')
 def server():
     server_config = g.db.execute('select * from server').fetchone()
@@ -39,18 +42,31 @@ def server():
         return render_template('server.html', server=server)
     else:
         #server needs configuration    
-        return render_template('server.html')
+        return render_template('server.html', server=None)
 
 @app.route('/server/', methods=['POST'])
 def edit_server():
+    # truncate server table (only one entry for now)
     g.db.execute('delete from server')
+    # save values to db
     g.db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
                  [request.form['host'],
                   request.form['port'],
                   request.form['username'],
                   request.form['password']])
     g.db.commit()
-    flash('Server settings saved!')
+    # attempt to connect to server
+    ftp = FTP()
+    try:
+        port = int(request.form['port'])
+        ftp.connect(request.form['host'], port, 5)
+        ftp.login(request.form['username'], request.form['password'])
+    except ValueError:
+        flash('error! make sure "Port" is a valid integer')
+    except socket.timeout:
+        flash('error! unable to connect to server: timeout')
+    else:
+        flash('success! connection established')
     return redirect(url_for('server'))
 
 if __name__ == '__main__':

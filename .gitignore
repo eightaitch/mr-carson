@@ -1,6 +1,9 @@
 *.py[co]
 *.swp
 
+# db
+*.db
+
 # Packages
 *.egg
 *.egg-info
