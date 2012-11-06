@@ -1,6 +1,75 @@
-<!doctype html>
-<title>mr-carson</title>
-{% for message in get_flashed_messages() %}
-<div class=flash>{{ message }}</div>
-{% endfor %}
-{% block body %}{% endblock %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>mr-carson</title>
+    <!-- Bootstrap -->
+    <link href="{{ url_for('static', filename='css/bootstrap-responsive.min.css') }}" rel="stylesheet" media="screen">
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" media="screen">
+<style type="text/css">
+      body {
+        padding-top: 20px;
+        padding-bottom: 40px;
+      }
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 700px;
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        margin: 60px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+
+      /* Supporting marketing content */
+      .marketing {
+        margin: 60px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+    </style>
+  </head>
+  <body>
+<div class="container-narrow">
+        {% for message in get_flashed_messages() %}
+        <div class=flash>{{ message }}</div>
+        {% endfor %}
+        {% block body %}{% endblock %}
+ 
+     <hr>
+
+      <div class="footer">
+        <p>
+            <img src="{{ url_for('static', filename='img/octocat.png') }}" width="30px" />
+            <a href="https://github.com/eightaitch">
+            eightaitch
+            </a>
+            /
+            <a href="https://github.com/eightaitch/mr-carson">
+            mr-carson
+            </a>
+        </p>
+      </div>
+
+</div>
+
+
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+  </body>
+</html>
+
