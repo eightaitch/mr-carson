@@ -80,6 +80,7 @@ def edit_server():
 
 @app.route('/tasks/', methods=['GET'])
 def tasks():
+    # populate form if GET sent
     results = g.db.execute('select * from tasks where up=1 order by name asc')
     uploads = [dict(name=row[1],
                     local=row[2],
@@ -90,7 +91,7 @@ def tasks():
                     local=row[2],
                     remote=row[3],
                     up=row[4]) for row in results.fetchall()]
-    return render_template('tasks.html', uploads=uploads, downloads=downloads)
+    return render_template('tasks.html', uploads=uploads, downloads=downloads, edit=request.args)
 
 @app.route('/tasks/', methods=['POST'])
 def add_task():

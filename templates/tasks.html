@@ -23,22 +23,22 @@
         <div class="span5 offset2">
               <h4>Name</h4>
               <p><em>e.g. <b>SickBeard to seedbox</b></em></p>
-              <input type="text" name="name" value="" />   
+              <input type="text" name="name" value="{{ edit.name }}" />   
 
               <h4>Local path</h4>
               <p><em>full path to local directory; e.g. <b>C:\files\watch\tv\</b> or <b>/home/anon/files/watch/tv/</b></em></p>
-              <input type="text" name="local" value="" />   
+              <input type="text" name="local" value="{{ edit.local}}" />   
 
               <h4>Remote path</h4>
               <p><em>full path to ftp directory; e.g. <b>/rtorrent/files/watch/tv/</b></em>
               </p>
-              <input type="text" name="remote" value="" />   
+              <input type="text" name="remote" value="{{ edit.remote }}" />   
 
               <h4>Direction</h4>
               <p></p>
               <select name="up">
-                <option value="1">Upload from pc to seedbox</option>
-                <option value="0">Download from seedbox to pc</option>
+                <option value="1" {% if edit.up == "1" %} selected="selected" {% endif %}>Upload from pc to seedbox</option>
+                <option value="0" {% if edit.up == "0" %} selected="selected" {% endif %}>Download from seedbox to pc</option>
               </select>
            <div class="jumbotron">
                 <input type="submit" value="Save settings & test connection" class="btn btn-large btn-success">
