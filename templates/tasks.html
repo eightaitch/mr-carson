@@ -57,6 +57,7 @@
             <h4>{{ upload.name }}</h4>
             <p><em>local: <b>{{ upload.local }}</b></em></p>
             <p><em>remote: <b>{{ upload.remote }}</b></em></p>
+            <a href="{{ url_for('delete_task', task_id=upload.id) }}" class="btn btn-danger">delete</a>
             {% else %}
             <h4>None</h4>
             {% endfor %}
@@ -69,6 +70,7 @@
             <h4>{{ download.name }}</h4>
             <p><em>local: <b>{{ download.local }}</b></em></p>
             <p><em>remote: <b>{{ download.remote }}</b></em></p>
+            <a href="{{ url_for('delete_task', task_id=download.id) }}" class="btn btn-danger">delete</a>
             {% else %}
             <h4>None</h4>
             {% endfor %}

@@ -82,12 +82,14 @@ def edit_server():
 def tasks():
     # populate form if GET sent
     results = g.db.execute('select * from tasks where up=1 order by name asc')
-    uploads = [dict(name=row[1],
+    uploads = [dict(id=row[0],
+                    name=row[1],
                     local=row[2],
                     remote=row[3],
                     up=row[4]) for row in results.fetchall()]
     results = g.db.execute('select * from tasks where up=0 order by name asc')
-    downloads = [dict(name=row[1],
+    downloads = [dict(id=row[0],
+                    name=row[1],
                     local=row[2],
                     remote=row[3],
                     up=row[4]) for row in results.fetchall()]
@@ -96,7 +98,7 @@ def tasks():
 @app.route('/tasks/', methods=['POST'])
 def add_task():
     # descriptive name?
-    if request.form['name'] == '':
+    if request.form['name'].strip() == '':
         flash_error('choose a descriptive name!') 
         return redirect(url_for('tasks', name=request.form['name'],
                                          local=request.form['local'],
@@ -161,7 +163,14 @@ def add_task():
     g.db.commit()
     flash_success('task tested and saved')
     return redirect(url_for('tasks'))
- 
+
+@app.route('/tasks/delete/<task_id>')
+def delete_task(task_id):
+    g.db.execute('delete from tasks where id=:id', {'id': task_id})
+    g.db.commit()
+    flash_success('task deleted!')
+    return redirect(url_for('tasks'))
+
 @app.route('/log/')
 def log():
     return render_template('log.html')
