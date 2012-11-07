@@ -68,9 +68,11 @@ def edit_server():
         ftp.connect(request.form['host'], port, 5)
         ftp.login(request.form['username'], request.form['password'])
     except ValueError:
-        flash_error('make sure "Port" is a valid integer')
+        flash_error('make sure \'Port\' is a valid integer')
     except socket.timeout:
         flash_error('unable to connect to server: timeout')
+    except socket.gaierror:
+        flash_error('make sure \'host\' is formatted correctly')
     else:
         flash_success('connection established')
     return redirect(url_for('server'))

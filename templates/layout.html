@@ -5,6 +5,7 @@
     <!-- Bootstrap -->
     <link href="{{ url_for('static', filename='css/bootstrap-responsive.min.css') }}" rel="stylesheet" media="screen">
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet" media="screen">
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
 <style type="text/css">
       body {
         padding-top: 20px;
@@ -45,11 +46,20 @@
   </head>
   <body>
 <div class="container-narrow">
-        <div class="hero-unit">
-        {% for category, message in get_flashed_messages(with_categories=true) %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <script>
+        $(document).ready(function () {
+            $("#temp-message").delay(3000).slideUp(1000);
+        });
+        </script>
+        <div class="hero-unit" id="temp-message">
+        {% for category, message in messages %}
             <h2 class="{{ category }}">{{ message }}</h2>
         {% endfor %}
         </div>
+        {% endif %}
+        {% endwith %}
         {% block body %}{% endblock %}
  
      <hr>
@@ -70,7 +80,6 @@
 </div>
 
 
-    <script src="http://code.jquery.com/jquery-latest.js"></script>
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
   </body>
 </html>
