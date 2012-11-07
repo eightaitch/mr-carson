@@ -19,24 +19,24 @@
 
       <hr>
 
-    <form action="{{ url_for('add_task') }}" method=post class=add-entry>
+    <form action="{{ url_for('add_task') }}" method=post>
         <div class="span5 offset2">
               <h4>Name</h4>
               <p><em>e.g. <b>SickBeard to seedbox</b></em></p>
-              <input type="text" name="name" value="{{ server.host }}" />   
+              <input type="text" name="name" value="" />   
 
               <h4>Local path</h4>
               <p><em>full path to local directory; e.g. <b>C:\files\watch\tv\</b> or <b>/home/anon/files/watch/tv/</b></em></p>
-              <input type="text" name="localpath" value="{{ server.username }}" />   
+              <input type="text" name="local" value="" />   
 
               <h4>Remote path</h4>
               <p><em>full path to ftp directory; e.g. <b>/rtorrent/files/watch/tv/</b></em>
               </p>
-              <input type="text" name="remotepath" value="{{ server.port }}" />   
+              <input type="text" name="remote" value="" />   
 
               <h4>Direction</h4>
               <p></p>
-              <select>
+              <select name="up">
                 <option value="1">Upload from pc to seedbox</option>
                 <option value="0">Download from seedbox to pc</option>
               </select>
@@ -46,4 +46,34 @@
     
        </div>
     </form> 
+
+    <div class="span9"><hr></div>
+
+    <div class="row-fluid marketing">
+        <div class="span6">
+            <h3>Uploads</h3>
+            {% for upload in uploads %}
+            <hr>
+            <h4>{{ upload.name }}</h4>
+            <p>{{ upload.local }}</p>
+            <p>{{ upload.remote }}</p>
+            {% else %}
+            <h4>None</h4>
+            {% endfor %}
+        </div>
+
+        <div class="span6">
+            <h3>Downloads</h3>
+            {% for download in downloads %}
+            <hr>
+            <h4>{{ download.name }}</h4>
+            <p>{{ download.local }}</p>
+            <p>{{ download.remote }}</p>
+            {% else %}
+            <h4>None</h4>
+            {% endfor %}
+        </div>
+
+    </div>
+
      {% endblock %}

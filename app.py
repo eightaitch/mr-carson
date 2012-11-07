@@ -79,11 +79,28 @@ def edit_server():
 
 @app.route('/tasks/')
 def tasks():
-    return render_template('tasks.html', server=None)
+    results = g.db.execute('select * from tasks where up=1 order by name asc')
+    uploads = [dict(name=row[1],
+                    local=row[2],
+                    remote=row[3],
+                    up=row[4]) for row in results.fetchall()]
+    results = g.db.execute('select * from tasks where up=0 order by name asc')
+    downloads = [dict(name=row[1],
+                    local=row[2],
+                    remote=row[3],
+                    up=row[4]) for row in results.fetchall()]
+    return render_template('tasks.html', uploads=uploads, downloads=downloads)
 
-@app.route('/add_task/')
+@app.route('/tasks/', methods=['POST'])
 def add_task():
-    return render_template('tasks.html', server=None)
+    # save values to db
+    g.db.execute('insert into tasks (name, local, remote, up) values (?, ?, ?, ?)',
+                 [request.form['name'],
+                  request.form['local'],
+                  request.form['remote'],
+                  request.form['up']])
+    g.db.commit()
+    return redirect(url_for('tasks'))
  
 @app.route('/log/')
 def log():
