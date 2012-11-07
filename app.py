@@ -5,7 +5,7 @@ import sqlite3
 import socket
 from flask import *
 from ftplib import *
-from apscheduler import *
+from apscheduler.scheduler import *
 
 # configuration
 DATABASE = 'sqlite/mr-carson.db'
@@ -18,6 +18,64 @@ PASSWORD = 'default'
 app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
+
+# scheduler
+sched = Scheduler()
+
+#uploads
+@sched.interval_schedule(seconds=5)
+def run_uploads():
+    db = sqlite3.connect(app.config['DATABASE'])
+    server_config = db.execute('select * from server').fetchone()
+    # vars:
+    ip = '1.2.3.4'
+    port = 20003
+    username = 'username'
+    password = 'password'
+
+    uploads = db.execute('select * from tasks where up=1').fetchall()
+    for upload in uploads:
+        print upload[0]
+    return True
+    # list of local watch directories
+    local_watch = [
+        'C:\\Users\\anon\\Downloads\\_watch\\movies\\', 
+        'C:\\Users\\anon\\Downloads\\_watch\\tv\\'
+        ]
+
+    # list of remote watch directories (same order as local)
+    remote_watch = [
+        '/rtorrent/files/watch/movies',
+        '/rtorrent/files/watch/tv'
+        ]
+
+    # connect to ftp server
+    ftp = FTP()
+    ftp.connect(ip, port)
+    ftp.login(username, password)
+
+    # check watch folder for new .torrent s
+    print 'upload: \n'
+    for i in range(0, len(local_watch)):
+        ftp.cwd(remote_watch[i])
+        filelist = os.listdir(local_watch[i])
+        for torrent in filelist:
+            # upload as needed
+            print torrent
+            f = open(local_watch[i] + torrent, 'rb')
+            ftp.storbinary("STOR " + torrent, f)
+            f.close()
+            os.remove(local_watch[i] + torrent)
+
+    # exit
+    ftp.quit()
+
+run_uploads()
+#downloads
+
+# start
+#sched.start()
+sched.shutdown()
 
 def flash_error(str):
     flash(u'Error! ' + str, 'text-error')
