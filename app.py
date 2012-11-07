@@ -1,3 +1,4 @@
+import os
 import sys
 sys.path.append('libs/')
 import sqlite3
@@ -101,18 +102,55 @@ def add_task():
                                          remote=request.form['remote'],
                                          up=request.form['up']))
     # require local trailing slash 
-    print request.form['local'][-1:]
     if all(c != request.form['local'][-1:] for c in ['/', '\\']):
         flash_error('make sure your local path ends with a trailing slash!') 
         return redirect(url_for('tasks', name=request.form['name'],
                                          local=request.form['local'],
                                          remote=request.form['remote'],
                                          up=request.form['up']))
+    # require remote trailing slash
+    if all(c != request.form['remote'][-1:] for c in ['/', '\\']):
+        flash_error('make sure your remote path ends with a trailing slash!') 
+        return redirect(url_for('tasks', name=request.form['name'],
+                                         local=request.form['local'],
+                                         remote=request.form['remote'],
+                                         up=request.form['up']))
     # valid local path?
     try:
-        file = open(request.form['local'])
+        file = open(request.form['local'] + '.mr-carson.tmp', 'w+')
+        file.close()
+        os.remove(request.form['local'] + '.mr-carson.tmp')
     except:
-        pass
+        flash_error('trouble accessing \'' + request.form['local'] + '\'') 
+        return redirect(url_for('tasks', name=request.form['name'],
+                                         local=request.form['local'],
+                                         remote=request.form['remote'],
+                                         up=request.form['up']))
+    # valid remote path?
+    server_config = g.db.execute('select * from server').fetchone()
+    if server_config != None:
+        # server entry exists
+        server = dict(host=server_config[1],
+                 port=server_config[2],
+                 username=server_config[3],
+                 password=server_config[4])
+    else:
+        # no server entry
+        flash_error('let\'s configure your ftp server!') 
+        return redirect(url_for('server'))
+    # try ftp to supplied directory
+    try:
+        ftp = FTP()
+        port = int(server['port'])
+        ftp.connect(server['host'], port, 5)
+        ftp.login(server['username'], server['password'])
+        ftp.cwd(request.form['remote'])
+    except:
+        flash_error('unable to access \'' + request.form['remote'] + '\'') 
+        return redirect(url_for('tasks', name=request.form['name'],
+                                         local=request.form['local'],
+                                         remote=request.form['remote'],
+                                         up=request.form['up']))
     # save values to db
     g.db.execute('insert into tasks (name, local, remote, up) values (?, ?, ?, ?)',
                  [request.form['name'],
@@ -120,6 +158,7 @@ def add_task():
                   request.form['remote'],
                   request.form['up']])
     g.db.commit()
+    flash_success('task tested and saved')
     return redirect(url_for('tasks'))
  
 @app.route('/log/')
