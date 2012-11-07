@@ -77,5 +77,17 @@ def edit_server():
         flash_success('connection established')
     return redirect(url_for('server'))
 
+@app.route('/tasks/')
+def tasks():
+    return render_template('tasks.html', server=None)
+
+@app.route('/add_task/')
+def add_task():
+    return render_template('tasks.html', server=None)
+ 
+@app.route('/log/')
+def log():
+    return 'log'
+
 if __name__ == '__main__':
     app.run()

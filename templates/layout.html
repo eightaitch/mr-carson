@@ -60,11 +60,12 @@
         </div>
         {% endif %}
         {% endwith %}
-        {% block body %}{% endblock %}
+        {% block body %}
+        {% endblock %}
  
-     <hr>
 
-      <div class="footer">
+      <div class="footer span9">
+     <hr>
         <p>
             <img src="{{ url_for('static', filename='img/octocat.png') }}" width="30px" />
             <a href="https://github.com/eightaitch">

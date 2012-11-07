@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block body %}
+
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="{{ url_for('server') }}">Server</a></li>
+          <li class="active"><a href="{{ url_for('tasks') }}">Tasks</a></li>
+          <li><a href="{{ url_for('log') }}">Log</a></li>
+        </ul>
+        <h3 class="muted">mr-carson</h3>
+      </div>
+
+      <hr>
+
+      <div class="jumbotron">
+        <h1>Now where should we move things?</h1>
+        <p class="lead">these are automated uploads & downloads that mr-carson will handle</p>
+      </div>
+
+      <hr>
+
+    <form action="{{ url_for('add_task') }}" method=post class=add-entry>
+        <div class="span5 offset2">
+              <h4>Name</h4>
+              <p><em>e.g. <b>SickBeard to seedbox</b></em></p>
+              <input type="text" name="name" value="{{ server.host }}" />   
+
+              <h4>Local path</h4>
+              <p><em>full path to local directory; e.g. <b>C:\files\watch\tv\</b> or <b>/home/anon/files/watch/tv/</b></em></p>
+              <input type="text" name="localpath" value="{{ server.username }}" />   
+
+              <h4>Remote path</h4>
+              <p><em>full path to ftp directory; e.g. <b>/rtorrent/files/watch/tv/</b></em>
+              </p>
+              <input type="text" name="remotepath" value="{{ server.port }}" />   
+
+              <h4>Direction</h4>
+              <p></p>
+              <select>
+                <option value="1">Upload from pc to seedbox</option>
+                <option value="0">Download from seedbox to pc</option>
+              </select>
+           <div class="jumbotron">
+                <input type="submit" value="Save settings & test connection" class="btn btn-large btn-success">
+           </div> 
+    
+       </div>
+    </form> 
+     {% endblock %}
