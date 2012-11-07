@@ -5,6 +5,7 @@ import sqlite3
 import socket
 from flask import *
 from ftplib import *
+from werkzeug import *
 from apscheduler.scheduler import *
 
 # configuration
@@ -142,10 +143,17 @@ def run_downloads():
         filelist = ftp.nlst()
         for torrent in filelist:
             if is_file(ftp, torrent):
-                download_file(ftp, torrent, remote, local)
+                try:
+                    download_file(ftp, torrent, remote, local)
+                    log(download[3] + torrent + ' moved to ' + download[2] + torrent) 
+                except Exception, e:
+                    log(e)
             else:
-                download_folder(ftp, torrent, remote, local)
-
+                try:
+                    download_folder(ftp, torrent, remote, local)
+                    log(download[3] + torrent + ' moved to ' + download[2] + torrent) 
+                except Exception, e:
+                    log(e)
     return True
 
 """ end downloads """ 
