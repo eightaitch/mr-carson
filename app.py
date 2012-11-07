@@ -22,53 +22,65 @@ app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 # scheduler
 sched = Scheduler()
 
+# logger
+def log(message, severity=0):
+    print message
+
 #uploads
 @sched.interval_schedule(seconds=5)
 def run_uploads():
+    # connect to db
     db = sqlite3.connect(app.config['DATABASE'])
-    server_config = db.execute('select * from server').fetchone()
-    # vars:
-    ip = '1.2.3.4'
-    port = 20003
-    username = 'username'
-    password = 'password'
 
+    # get upload tasks from db
     uploads = db.execute('select * from tasks where up=1').fetchall()
+
+    # see if anything requires upload
+    do_upload = False
     for upload in uploads:
-        print upload[0]
+        if len(os.listdir(upload[2])) != 0:
+            do_upload = True
+            break 
+        
+    # do upload            
+    if do_upload:
+
+        # connect to ftp server
+        server_config = db.execute('select * from server').fetchone()
+        db.close()
+        try:
+            ftp = FTP()
+            ftp.connect(server_config[1], server_config[2])
+            ftp.login(server_config[3], server_config[4])
+        except Exception, e:
+            log(e)
+            return False
+
+        # store .torrent files 
+        for upload in uploads:
+            try:
+                ftp.cwd(upload[3])
+                filelist = os.listdir(upload[2])
+                for torrent in filelist:
+                    try:
+                        f = open(upload[2] + torrent, 'rb')
+                        ftp.storbinary("STOR " + torrent, f)
+                        f.close()
+                        os.remove(upload[2] + torrent)      
+                        log(upload[2] + torrent + ' moved to ' + upload[3] + torrent) 
+                    except Exception, e:
+                        log(e) 
+                        log('could not move '+upload[2]+torrent+' to '+upload[3]+torrent, 2) 
+            except Exception, e:
+                log(e) 
+
+        # close connection
+        ftp.quit()
+
+    else:
+        db.close()
+
     return True
-    # list of local watch directories
-    local_watch = [
-        'C:\\Users\\anon\\Downloads\\_watch\\movies\\', 
-        'C:\\Users\\anon\\Downloads\\_watch\\tv\\'
-        ]
-
-    # list of remote watch directories (same order as local)
-    remote_watch = [
-        '/rtorrent/files/watch/movies',
-        '/rtorrent/files/watch/tv'
-        ]
-
-    # connect to ftp server
-    ftp = FTP()
-    ftp.connect(ip, port)
-    ftp.login(username, password)
-
-    # check watch folder for new .torrent s
-    print 'upload: \n'
-    for i in range(0, len(local_watch)):
-        ftp.cwd(remote_watch[i])
-        filelist = os.listdir(local_watch[i])
-        for torrent in filelist:
-            # upload as needed
-            print torrent
-            f = open(local_watch[i] + torrent, 'rb')
-            ftp.storbinary("STOR " + torrent, f)
-            f.close()
-            os.remove(local_watch[i] + torrent)
-
-    # exit
-    ftp.quit()
 
 run_uploads()
 #downloads
