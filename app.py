@@ -91,8 +91,14 @@ def is_file(ftp, filename):
     except:
         return False
 
-def download_file(torrent, remote, local):
+def download_file(ftp, torrent, remote, local):
+    f = open(local + torrent, 'wb')
+    ftp.retrbinary("RETR " + remote + torrent, f.write)
+    f.close()
     
+def download_folder(ftp, torrent, remote, local):
+    
+
 def run_downloads():
     # connect to db
     db = sqlite3.connect(app.config['DATABASE'])
@@ -117,9 +123,9 @@ def run_downloads():
         filelist = ftp.nlst()
         for torrent in filelist:
             if is_file(torrent):
-                download_file(torrent, remote, local)
+                download_file(ftp, torrent, remote, local)
             else:
-                download_folder(torrent, remote, local)
+                download_folder(ftp, torrent, remote, local)
 
 
 """ end downloads """ 
