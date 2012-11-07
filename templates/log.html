@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+{% block body %}
+
+      <div class="masthead">
+        <ul class="nav nav-pills pull-right">
+          <li><a href="{{ url_for('server') }}">Server</a></li>
+          <li><a href="{{ url_for('tasks') }}">Tasks</a></li>
+          <li class="active"><a href="{{ url_for('log') }}">Log</a></li>
+        </ul>
+        <h3 class="muted">mr-carson</h3>
+      </div>
+
+      <hr>
+
+      <div class="jumbotron">
+        <h1>The happenings downstairs . . .</h1>
+        <p class="lead">"Now, if I was a gentleman, I wouldn't want to know."</p>
+      </div>
+
+      <hr>
+
+
+     {% endblock %}

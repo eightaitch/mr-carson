@@ -164,7 +164,7 @@ def add_task():
  
 @app.route('/log/')
 def log():
-    return 'log'
+    return render_template('log.html')
 
 if __name__ == '__main__':
     app.run()

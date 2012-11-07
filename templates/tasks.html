@@ -55,8 +55,8 @@
             {% for upload in uploads %}
             <hr>
             <h4>{{ upload.name }}</h4>
-            <p>{{ upload.local }}</p>
-            <p>{{ upload.remote }}</p>
+            <p><em>local: <b>{{ upload.local }}</b></em></p>
+            <p><em>remote: <b>{{ upload.remote }}</b></em></p>
             {% else %}
             <h4>None</h4>
             {% endfor %}
@@ -67,8 +67,8 @@
             {% for download in downloads %}
             <hr>
             <h4>{{ download.name }}</h4>
-            <p>{{ download.local }}</p>
-            <p>{{ download.remote }}</p>
+            <p><em>local: <b>{{ download.local }}</b></em></p>
+            <p><em>remote: <b>{{ download.remote }}</b></em></p>
             {% else %}
             <h4>None</h4>
             {% endfor %}
