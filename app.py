@@ -92,12 +92,31 @@ def is_file(ftp, filename):
         return False
 
 def download_file(ftp, torrent, remote, local):
-    f = open(local + torrent, 'wb')
-    ftp.retrbinary("RETR " + remote + torrent, f.write)
+    print 'try: ' + os.path.normpath(local+'/'+torrent)
+    f = open(os.path.normpath(local+'/'+torrent), 'wb')
+    print 'done: ' + os.path.normpath(local+'/'+torrent)
+    ftp.retrbinary("RETR " + os.path.join(remote+'/'+torrent), f.write)
     f.close()
     
 def download_folder(ftp, torrent, remote, local):
-    
+    print 'cwd: ' + remote
+    print 'cwd: ' + torrent 
+    ftp.cwd(remote)    
+    ftp.cwd(torrent)
+    os.chdir(local)
+    os.mkdir(torrent)
+    os.chdir(torrent)
+    filelist = ftp.nlst()
+    ftppwd = ftp.pwd()
+    oscwd = os.getcwd()
+    for file in filelist:
+        print 'next: ' + file
+        if is_file(ftp, file):
+            print 'dl file: ' + file + ' ' + ftppwd + ' ' + oscwd
+            download_file(ftp, file, ftppwd, oscwd)
+        else:
+            print 'dl folder: ' + file + ' ' + ftppwd + ' ' + oscwd
+            download_folder(ftp, file, ftppwd, oscwd)
 
 def run_downloads():
     # connect to db
@@ -122,14 +141,15 @@ def run_downloads():
         ftp.cwd(remote)   
         filelist = ftp.nlst()
         for torrent in filelist:
-            if is_file(torrent):
+            if is_file(ftp, torrent):
                 download_file(ftp, torrent, remote, local)
             else:
                 download_folder(ftp, torrent, remote, local)
 
+    return True
 
 """ end downloads """ 
-
+run_downloads()
 # start
 #sched.start()
 sched.shutdown()
