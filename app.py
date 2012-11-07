@@ -26,7 +26,7 @@ sched = Scheduler()
 def log(message, severity=0):
     print message
 
-#uploads
+""" uploads """
 @sched.interval_schedule(seconds=5)
 def run_uploads():
     # connect to db
@@ -81,9 +81,48 @@ def run_uploads():
         db.close()
 
     return True
+""" end uploads"""
 
-run_uploads()
-#downloads
+""" downloads """
+def is_file(ftp, filename):
+    try:
+        ftp.size(filename) is not None
+        return True
+    except:
+        return False
+
+def download_file(torrent, remote, local):
+    
+def run_downloads():
+    # connect to db
+    db = sqlite3.connect(app.config['DATABASE'])
+    # server settings
+    server_config = db.execute('select * from server').fetchone()
+    # get download tasks from db
+    downloads = db.execute('select * from tasks where up=0').fetchall()
+
+    try:
+        ftp = FTP()
+        ftp.connect(server_config[1], server_config[2])
+        ftp.login(server_config[3], server_config[4])
+    except Exception, e:
+        log(e)
+        return False
+    
+    # check download directories 
+    for download in downloads:
+        remote = download[3]
+        local = download[2]
+        ftp.cwd(remote)   
+        filelist = ftp.nlst()
+        for torrent in filelist:
+            if is_file(torrent):
+                download_file(torrent, remote, local)
+            else:
+                download_folder(torrent, remote, local)
+
+
+""" end downloads """ 
 
 # start
 #sched.start()
