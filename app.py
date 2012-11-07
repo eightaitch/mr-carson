@@ -78,7 +78,7 @@ def edit_server():
         flash_success('connection established')
     return redirect(url_for('server'))
 
-@app.route('/tasks/')
+@app.route('/tasks/', methods=['GET'])
 def tasks():
     results = g.db.execute('select * from tasks where up=1 order by name asc')
     uploads = [dict(name=row[1],
