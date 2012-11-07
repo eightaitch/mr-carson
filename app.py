@@ -93,6 +93,26 @@ def tasks():
 
 @app.route('/tasks/', methods=['POST'])
 def add_task():
+    # descriptive name?
+    if request.form['name'] == '':
+        flash_error('choose a descriptive name!') 
+        return redirect(url_for('tasks', name=request.form['name'],
+                                         local=request.form['local'],
+                                         remote=request.form['remote'],
+                                         up=request.form['up']))
+    # require local trailing slash 
+    print request.form['local'][-1:]
+    if all(c != request.form['local'][-1:] for c in ['/', '\\']):
+        flash_error('make sure your local path ends with a trailing slash!') 
+        return redirect(url_for('tasks', name=request.form['name'],
+                                         local=request.form['local'],
+                                         remote=request.form['remote'],
+                                         up=request.form['up']))
+    # valid local path?
+    try:
+        file = open(request.form['local'])
+    except:
+        pass
     # save values to db
     g.db.execute('insert into tasks (name, local, remote, up) values (?, ?, ?, ?)',
                  [request.form['name'],
