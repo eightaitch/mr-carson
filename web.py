@@ -19,6 +19,8 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
+# test sqlalchemy
+
 db = sqlite3.connect(os.path.normpath(app.config['DATABASE']), check_same_thread = False)
 
 def flash_error(str):
@@ -30,6 +32,7 @@ def flash_success(str):
 @app.route('/')
 @app.route('/server/')
 def server():
+    #server_config = conn.execute(select([server])).fetchone()
     server_config = db.execute('select * from server').fetchone()
     if server_config != None:
         # server entry exists
