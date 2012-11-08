@@ -1,14 +1,11 @@
 import os
 import sys
-import sched, time
 sys.path.append('libs/')
 import sqlite3
 import socket
 from flask import *
 from ftplib import *
 from werkzeug import *
-import uploads
-import downloads
 
 # configuration
 DATABASE = os.path.normpath('sqlite/mr-carson.db')
@@ -22,32 +19,7 @@ app = Flask(__name__)
 app.config.from_object(__name__)
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
 
-# scheduler
-s = sched.scheduler(time.time, time.sleep)
-def print_time(): print 'from print_time', time.time()
-def print_some_times():
-    print time.time()
-    s.enter(5, 1, print_time, ())
-    s.enter(10, 1, print_time, ())
-    s.run()
-    print time.time()
-
-print_some_times()
-
-# logger
-def log(message, severity=0):
-    print message
-
-@app.before_request
-def before_request():
-    g.db = connect_db()
-
-@app.teardown_request
-def teardown_request(exception):
-    g.db.close()
-
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
+db = sqlite3.connect(os.path.normpath(app.config['DATABASE']), check_same_thread = False)
 
 def flash_error(str):
     flash(u'Error! ' + str, 'text-error')
@@ -58,7 +30,7 @@ def flash_success(str):
 @app.route('/')
 @app.route('/server/')
 def server():
-    server_config = g.db.execute('select * from server').fetchone()
+    server_config = db.execute('select * from server').fetchone()
     if server_config != None:
         # server entry exists
         #values = dict('host'=server_config[0])
@@ -74,14 +46,16 @@ def server():
 @app.route('/server/', methods=['POST'])
 def edit_server():
     # truncate server table (only one entry for now)
-    g.db.execute('delete from server')
+    print 'try'
+    db.execute('delete from server')
+    print 'done'
     # save values to db
-    g.db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
+    db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
                  [request.form['host'],
                   request.form['port'],
                   request.form['username'],
                   request.form['password']])
-    g.db.commit()
+    db.commit()
     # attempt to connect to server
     ftp = FTP()
     try:
@@ -101,13 +75,13 @@ def edit_server():
 @app.route('/tasks/', methods=['GET'])
 def tasks():
     # populate form if GET sent
-    results = g.db.execute('select * from tasks where up=1 order by name asc')
+    results = db.execute('select * from tasks where up=1 order by name asc')
     uploads = [dict(id=row[0],
                     name=row[1],
                     local=row[2],
                     remote=row[3],
                     up=row[4]) for row in results.fetchall()]
-    results = g.db.execute('select * from tasks where up=0 order by name asc')
+    results = db.execute('select * from tasks where up=0 order by name asc')
     downloads = [dict(id=row[0],
                     name=row[1],
                     local=row[2],
@@ -150,7 +124,7 @@ def add_task():
                                          remote=request.form['remote'],
                                          up=request.form['up']))
     # valid remote path?
-    server_config = g.db.execute('select * from server').fetchone()
+    server_config = db.execute('select * from server').fetchone()
     if server_config != None:
         # server entry exists
         server = dict(host=server_config[1],
@@ -175,19 +149,19 @@ def add_task():
                                          remote=request.form['remote'],
                                          up=request.form['up']))
     # save values to db
-    g.db.execute('insert into tasks (name, local, remote, up) values (?, ?, ?, ?)',
+    db.execute('insert into tasks (name, local, remote, up) values (?, ?, ?, ?)',
                  [request.form['name'],
                   request.form['local'],
                   request.form['remote'],
                   request.form['up']])
-    g.db.commit()
+    db.commit()
     flash_success('task tested and saved')
     return redirect(url_for('tasks'))
 
 @app.route('/tasks/delete/<task_id>')
 def delete_task(task_id):
-    g.db.execute('delete from tasks where id=:id', {'id': task_id})
-    g.db.commit()
+    db.execute('delete from tasks where id=:id', {'id': task_id})
+    db.commit()
     flash_success('task deleted!')
     return redirect(url_for('tasks'))
 
