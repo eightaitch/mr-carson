@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import os
 import sys
 sys.path.append('libs/')
@@ -7,9 +8,14 @@ from flask import *
 from ftplib import *
 from werkzeug import *
 from apscheduler.scheduler import *
+import uploads
+import downloads
+from sqlite3 import dbapi2 as sqlite3
+from flask import Flask, request, session, g, redirect, url_for, abort, \
+     render_template, flash, _app_ctx_stack
 
 # configuration
-DATABASE = 'sqlite/mr-carson.db'
+DATABASE = os.path.normpath('sqlite/mr-carson.db')
 DEBUG = True
 SECRET_KEY = 'development key'
 USERNAME = 'admin'
@@ -27,140 +33,29 @@ sched = Scheduler()
 def log(message, severity=0):
     print message
 
-""" uploads """
-@sched.interval_schedule(seconds=5)
-def run_uploads():
-    # connect to db
-    db = sqlite3.connect(app.config['DATABASE'])
+def get_db():
+    """Opens a new database connection if there is none yet for the
+    current application context.
+    """
+    return sqlite3.connect(app.config['DATABASE'])
+    #top = _app_ctx_stack.top
+    #if not hasattr(top, 'sqlite_db'):
+    #    top.sqlite_db = sqlite3.connect(app.config['DATABASE'])
+    #return top.sqlite_db
 
-    # get upload tasks from db
-    uploads = db.execute('select * from tasks where up=1').fetchall()
+@app.teardown_appcontext
+def close_db_connection(exception):
+    """Closes the database again at the end of the request."""
+    top = _app_ctx_stack.top
+    if hasattr(top, 'sqlite_db'):
+        top.sqlite_db.close()
 
-    # see if anything requires upload
-    do_upload = False
-    for upload in uploads:
-        if len(os.listdir(upload[2])) != 0:
-            do_upload = True
-            break 
-        
-    # do upload            
-    if do_upload:
+#sched.add_interval_job(uploads.run_uploads, seconds=1)
+sched.add_interval_job(downloads.run_downloads, args=[app.config['DATABASE']], seconds=1)
 
-        # connect to ftp server
-        server_config = db.execute('select * from server').fetchone()
-        db.close()
-        try:
-            ftp = FTP()
-            ftp.connect(server_config[1], server_config[2])
-            ftp.login(server_config[3], server_config[4])
-        except Exception, e:
-            log(e)
-            return False
-
-        # store .torrent files 
-        for upload in uploads:
-            try:
-                ftp.cwd(upload[3])
-                filelist = os.listdir(upload[2])
-                for torrent in filelist:
-                    try:
-                        f = open(upload[2] + torrent, 'rb')
-                        ftp.storbinary("STOR " + torrent, f)
-                        f.close()
-                        os.remove(upload[2] + torrent)      
-                        log(upload[2] + torrent + ' moved to ' + upload[3] + torrent) 
-                    except Exception, e:
-                        log(e) 
-                        log('could not move '+upload[2]+torrent+' to '+upload[3]+torrent, 2) 
-            except Exception, e:
-                log(e) 
-
-        # close connection
-        ftp.quit()
-
-    else:
-        db.close()
-
-    return True
-""" end uploads"""
-
-""" downloads """
-def is_file(ftp, filename):
-    try:
-        ftp.size(filename) is not None
-        return True
-    except:
-        return False
-
-def download_file(ftp, torrent, remote, local):
-    print 'try: ' + os.path.normpath(local+'/'+torrent)
-    f = open(os.path.normpath(local+'/'+torrent), 'wb')
-    print 'done: ' + os.path.normpath(local+'/'+torrent)
-    ftp.retrbinary("RETR " + os.path.join(remote+'/'+torrent), f.write)
-    f.close()
-    
-def download_folder(ftp, torrent, remote, local):
-    print 'cwd: ' + remote
-    print 'cwd: ' + torrent 
-    ftp.cwd(remote)    
-    ftp.cwd(torrent)
-    os.chdir(local)
-    os.mkdir(torrent)
-    os.chdir(torrent)
-    filelist = ftp.nlst()
-    ftppwd = ftp.pwd()
-    oscwd = os.getcwd()
-    for file in filelist:
-        print 'next: ' + file
-        if is_file(ftp, file):
-            print 'dl file: ' + file + ' ' + ftppwd + ' ' + oscwd
-            download_file(ftp, file, ftppwd, oscwd)
-        else:
-            print 'dl folder: ' + file + ' ' + ftppwd + ' ' + oscwd
-            download_folder(ftp, file, ftppwd, oscwd)
-
-def run_downloads():
-    # connect to db
-    db = sqlite3.connect(app.config['DATABASE'])
-    # server settings
-    server_config = db.execute('select * from server').fetchone()
-    # get download tasks from db
-    downloads = db.execute('select * from tasks where up=0').fetchall()
-
-    try:
-        ftp = FTP()
-        ftp.connect(server_config[1], server_config[2])
-        ftp.login(server_config[3], server_config[4])
-    except Exception, e:
-        log(e)
-        return False
-    
-    # check download directories 
-    for download in downloads:
-        remote = download[3]
-        local = download[2]
-        ftp.cwd(remote)   
-        filelist = ftp.nlst()
-        for torrent in filelist:
-            if is_file(ftp, torrent):
-                try:
-                    download_file(ftp, torrent, remote, local)
-                    log(download[3] + torrent + ' moved to ' + download[2] + torrent) 
-                except Exception, e:
-                    log(e)
-            else:
-                try:
-                    download_folder(ftp, torrent, remote, local)
-                    log(download[3] + torrent + ' moved to ' + download[2] + torrent) 
-                except Exception, e:
-                    log(e)
-    return True
-
-""" end downloads """ 
-run_downloads()
 # start
-#sched.start()
-sched.shutdown()
+sched.start()
+#sched.shutdown()
 
 def flash_error(str):
     flash(u'Error! ' + str, 'text-error')
@@ -168,21 +63,11 @@ def flash_error(str):
 def flash_success(str):
     flash(u'Success! ' + str, 'text-success')
 
-def connect_db():
-    return sqlite3.connect(app.config['DATABASE'])
-
-@app.before_request
-def before_request():
-    g.db = connect_db()
-
-@app.teardown_request
-def teardown_request(exception):
-    g.db.close()
-
 @app.route('/')
 @app.route('/server/')
 def server():
-    server_config = g.db.execute('select * from server').fetchone()
+    db = get_db()
+    server_config = db.execute('select * from server').fetchone()
     if server_config != None:
         # server entry exists
         #values = dict('host'=server_config[0])
@@ -197,15 +82,16 @@ def server():
 
 @app.route('/server/', methods=['POST'])
 def edit_server():
+    db = get_db()
     # truncate server table (only one entry for now)
-    g.db.execute('delete from server')
+    db.execute('delete from server')
     # save values to db
-    g.db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
+    db.execute('insert into server (host, port, username, password) values (?, ?, ?, ?)',
                  [request.form['host'],
                   request.form['port'],
                   request.form['username'],
                   request.form['password']])
-    g.db.commit()
+    db.commit()
     # attempt to connect to server
     ftp = FTP()
     try:
@@ -224,14 +110,15 @@ def edit_server():
 
 @app.route('/tasks/', methods=['GET'])
 def tasks():
+    db = get_db()
     # populate form if GET sent
-    results = g.db.execute('select * from tasks where up=1 order by name asc')
+    results = db.execute('select * from tasks where up=1 order by name asc')
     uploads = [dict(id=row[0],
                     name=row[1],
                     local=row[2],
                     remote=row[3],
                     up=row[4]) for row in results.fetchall()]
-    results = g.db.execute('select * from tasks where up=0 order by name asc')
+    results = db.execute('select * from tasks where up=0 order by name asc')
     downloads = [dict(id=row[0],
                     name=row[1],
                     local=row[2],
@@ -274,7 +161,8 @@ def add_task():
                                          remote=request.form['remote'],
                                          up=request.form['up']))
     # valid remote path?
-    server_config = g.db.execute('select * from server').fetchone()
+    db = get_db()
+    server_config = db.execute('select * from server').fetchone()
     if server_config != None:
         # server entry exists
         server = dict(host=server_config[1],
@@ -299,24 +187,26 @@ def add_task():
                                          remote=request.form['remote'],
                                          up=request.form['up']))
     # save values to db
-    g.db.execute('insert into tasks (name, local, remote, up) values (?, ?, ?, ?)',
+    db.execute('insert into tasks (name, local, remote, up) values (?, ?, ?, ?)',
                  [request.form['name'],
                   request.form['local'],
                   request.form['remote'],
                   request.form['up']])
-    g.db.commit()
+    db.commit()
     flash_success('task tested and saved')
     return redirect(url_for('tasks'))
 
 @app.route('/tasks/delete/<task_id>')
 def delete_task(task_id):
-    g.db.execute('delete from tasks where id=:id', {'id': task_id})
-    g.db.commit()
+    db = get_db()
+    db.execute('delete from tasks where id=:id', {'id': task_id})
+    db.commit()
     flash_success('task deleted!')
     return redirect(url_for('tasks'))
 
 @app.route('/log/')
 def log():
+    db = get_db()
     return render_template('log.html')
 
 if __name__ == '__main__':
